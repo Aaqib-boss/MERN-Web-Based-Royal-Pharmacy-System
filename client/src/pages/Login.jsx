@@ -82,7 +82,7 @@ const Login = () => {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/forgot-password', { email: forgotEmail });
-      toast.success(data.message || 'Recovery link and OTP sent to your mobile!');
+      toast.success(data.message || 'Recovery link and OTP sent to your email!');
       setIsOtpSent(true);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error sending recovery link');
@@ -214,7 +214,7 @@ const Login = () => {
               Reset Your Password
             </h2>
             <p className="text-xs text-slate-400 dark:text-slate-500 text-center mb-6 leading-relaxed">
-              Enter the OTP verification code sent to your mobile and your new 6-character password below.
+              Enter the OTP verification code sent to your email and your new 6-character password below.
             </p>
 
             <div className="space-y-1.5">
@@ -311,7 +311,7 @@ const Login = () => {
               Forgot Password?
             </h2>
             <p className="text-xs text-slate-400 dark:text-slate-500 text-center mb-6 leading-relaxed">
-              Enter your registered email address and we'll send a recovery link and OTP verification code to your mobile number.
+              Enter your registered email address and we'll send a recovery link and OTP verification code to your email address.
             </p>
 
             <div className="space-y-1.5">

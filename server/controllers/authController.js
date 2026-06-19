@@ -39,7 +39,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Forgot Password (SMS/OTP flow with email lookup)
+// @desc    Forgot Password (Email SMTP OTP flow)
 // @route   POST /api/auth/forgot-password
 // @access  Public
 const forgotPassword = async (req, res) => {
@@ -51,12 +51,6 @@ const forgotPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User with this email does not exist' });
     }
-
-    if (!user.phone) {
-      return res.status(400).json({ message: 'No registered contact number found on this user account' });
-    }
-
-    const phone = user.phone;
 
     // Generate random 6-digit numeric OTP code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -80,14 +74,60 @@ const forgotPassword = async (req, res) => {
     // Reset URL
     const resetUrl = `http://localhost:3050/login?token=${resetToken}`;
 
-    // Output MOCK SMS to console log (goes to the registered phone number, NOT email)
-    console.log('\n==================================================');
-    console.log('*** SMS SENDING (MOCK): PASSWORD RECOVERY ***');
-    console.log(`To Mobile: ${phone} (Registered for user ${email})`);
-    console.log(`Message: Your Royal Pharmacy recovery OTP is ${otp}. Use the following link to reset: ${resetUrl}`);
-    console.log('==================================================\n');
+    // Prepare email transport using SMTP credentials if provided
+    const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
 
-    res.status(200).json({ message: 'Recovery link and OTP code sent to your registered mobile number' });
+    if (hasSmtpConfig && process.env.SMTP_USER !== 'example@gmail.com') {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        const mailOptions = {
+          from: `"Royal Pharmacy" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: 'Royal Pharmacy - Password Recovery OTP',
+          text: `Your Royal Pharmacy recovery OTP is ${otp}.\n\nUse the following link to reset your password:\n${resetUrl}\n\nThis OTP is valid for 5 minutes.`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 500px;">
+              <h2 style="color: #10b981;">Password Recovery</h2>
+              <p>Your Royal Pharmacy recovery OTP is:</p>
+              <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; padding: 10px 0; color: #047857;">${otp}</div>
+              <p>Use the link below to reset your password:</p>
+              <a href="${resetUrl}" style="display: inline-block; background-color: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px 0;">Reset Password</a>
+              <p style="color: #64748b; font-size: 12px; margin-top: 20px;">This OTP is valid for 5 minutes. If you did not request this, please ignore this email.</p>
+            </div>
+          `,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent successfully to ${email}`);
+      } catch (mailError) {
+        console.error('Nodemailer SMTP failed to send email:', mailError.message);
+        console.log('\n==================================================');
+        console.log('*** EMAIL SENDING FALLBACK (MOCK): PASSWORD RECOVERY ***');
+        console.log(`To Email: ${email}`);
+        console.log(`OTP Code: ${otp}`);
+        console.log(`Reset Link: ${resetUrl}`);
+        console.log('==================================================\n');
+      }
+    } else {
+      console.log('Nodemailer SMTP not configured or using placeholders. Mocking email send:');
+      console.log('\n==================================================');
+      console.log('*** EMAIL SENDING (MOCK): PASSWORD RECOVERY ***');
+      console.log(`To Email: ${email}`);
+      console.log(`OTP Code: ${otp}`);
+      console.log(`Reset Link: ${resetUrl}`);
+      console.log('==================================================\n');
+    }
+
+    res.status(200).json({ message: 'Recovery link and OTP code sent to your registered email address' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

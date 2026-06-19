@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://web-based-royal-pharmacy-system.onrender.com/api',
+  baseURL: 'http://localhost:5000/api',
 });
 
 // Interceptor to inject JWT authentication token
