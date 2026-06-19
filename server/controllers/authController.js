@@ -10,14 +10,10 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
-// @access  Public
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check for user
     const user = await User.findOne({ email }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
@@ -39,9 +35,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Forgot Password (Email SMTP OTP flow)
-// @route   POST /api/auth/forgot-password
-// @access  Public
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -52,37 +45,30 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: 'User with this email does not exist' });
     }
 
-    // Generate random 6-digit numeric OTP code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Generate reset token for recovery link
     const resetToken = crypto.randomBytes(20).toString('hex');
 
-    // Hash token and set to resetPasswordToken field
     user.resetPasswordToken = crypto
       .createHash('sha256')
       .update(resetToken)
       .digest('hex');
 
-    // Set token expiration (10 minutes) and OTP code with expiration (5 minutes)
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     user.otpCode = otp;
     user.otpExpires = Date.now() + 5 * 60 * 1000;
 
     await user.save();
 
-    // Reset URL
-    const resetUrl = `http://localhost:3050/login?token=${resetToken}`;
+    const resetUrl = `https://web-based-royal-pharmacy-system.vercel.app/login?token=${resetToken}`;
 
-    // Prepare email transport using SMTP credentials if provided
     const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
 
     if (hasSmtpConfig && process.env.SMTP_USER !== 'example@gmail.com') {
       try {
         const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
+          port: 465,
+          secure: true,
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
@@ -133,9 +119,6 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// @desc    Reset Password (SMS/OTP verification)
-// @route   POST /api/auth/reset-password
-// @access  Public
 const resetPassword = async (req, res) => {
   const { token, email, otp, password } = req.body;
 
@@ -166,12 +149,10 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Missing parameters for reset validation' });
     }
 
-    // Verify OTP code
     if (!user.otpCode || user.otpCode !== otp || !user.otpExpires || user.otpExpires < Date.now()) {
       return res.status(400).json({ message: 'Invalid or expired OTP verification code' });
     }
 
-    // Set new password
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
@@ -186,9 +167,6 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// @desc    Create a user (Admin Only)
-// @route   POST /api/auth/create-user
-// @access  Private/Admin
 const createUser = async (req, res) => {
   const { name, email, password, role, phone, address } = req.body;
 
@@ -226,9 +204,6 @@ const createUser = async (req, res) => {
   }
 };
 
-// @desc    Get all users (Admin Only)
-// @route   GET /api/auth/users
-// @access  Private/Admin
 const getUsers = async (req, res) => {
   try {
     const users = await User.find({}).sort({ createdAt: -1 });
@@ -238,9 +213,6 @@ const getUsers = async (req, res) => {
   }
 };
 
-// @desc    Delete a user (Admin Only)
-// @route   DELETE /api/auth/users/:id
-// @access  Private/Admin
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -249,7 +221,6 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Don't let an admin delete themselves
     if (user._id.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: 'You cannot delete your own account' });
     }
@@ -261,9 +232,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// @desc    Update user profile photo
-// @route   PUT /api/auth/profile/photo
-// @access  Private
 const updateProfilePhoto = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -276,7 +244,6 @@ const updateProfilePhoto = async (req, res) => {
       return res.status(400).json({ message: 'Please upload a file' });
     }
 
-    // Store relative path
     user.profilePhoto = `/uploads/${req.file.filename}`;
     await user.save();
 
@@ -293,9 +260,6 @@ const updateProfilePhoto = async (req, res) => {
   }
 };
 
-// @desc    Delete user profile photo
-// @route   DELETE /api/auth/profile/photo
-// @access  Private
 const deleteProfilePhoto = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -320,9 +284,6 @@ const deleteProfilePhoto = async (req, res) => {
   }
 };
 
-// @desc    Update user details (Admin Only)
-// @route   PUT /api/auth/users/:id
-// @access  Private/Admin
 const updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -336,7 +297,6 @@ const updateUser = async (req, res) => {
     user.phone = req.body.phone || user.phone;
     user.address = req.body.address || user.address;
 
-    // Prevent self-role updates
     if (req.body.role && user._id.toString() !== req.user._id.toString()) {
       user.role = req.body.role;
     }
@@ -348,9 +308,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// @desc    Register a new user (Public)
-// @route   POST /api/auth/register
-// @access  Public
 const registerUser = async (req, res) => {
   const { name, email, password, phone, address } = req.body;
 
@@ -389,14 +346,10 @@ const registerUser = async (req, res) => {
   }
 };
 
-// @desc    Delete logged-in user account & all associated data
-// @route   DELETE /api/auth/profile
-// @access  Private
 const deleteAccount = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Delete associated data
     const Cash = require('../models/cash');
     const Cheque = require('../models/cheque');
     const Return = require('../models/return');
@@ -411,7 +364,6 @@ const deleteAccount = async (req, res) => {
     await Product.deleteMany({ userId });
     await Reason.deleteMany({ userId });
 
-    // Delete the user account
     await User.deleteOne({ _id: userId });
 
     res.json({ message: 'User account and all associated data deleted successfully' });
