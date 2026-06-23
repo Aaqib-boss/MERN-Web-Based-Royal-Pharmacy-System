@@ -615,36 +615,40 @@ const Return = () => {
 
                   {/* Selected Products List */}
                   {selectedProducts.length > 0 && (
-                    <div className="mt-3 border border-slate-200 dark:border-white/5 rounded-2xl bg-slate-50/50 dark:bg-darkBg-input/30 p-3 space-y-2.5 max-h-48 overflow-y-auto shadow-inner">
+                    <div className="mt-3 border border-slate-200 dark:border-white/5 rounded-2xl bg-slate-50/50 dark:bg-darkBg-input/30 p-3 space-y-3.5 max-h-56 overflow-y-auto shadow-inner">
                       {selectedProducts.map((prod) => (
-                        <div key={prod._id} className="flex items-center justify-between text-xs border-b border-slate-100/50 dark:border-white/5 pb-2.5 last:border-b-0 last:pb-0">
-                          <div className="flex-1 pr-2">
-                            <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">{prod.productName}</div>
-                            <div className="text-slate-400 font-bold mt-0.5">RS {prod.price.toFixed(2)}</div>
+                        <div key={prod._id} className="flex flex-col text-xs border-b border-slate-200/50 dark:border-white/5 pb-3 last:border-b-0 last:pb-0 gap-2">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 pr-2">
+                              <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">{prod.productName}</div>
+                              <div className="text-slate-400 font-bold mt-0.5">RS {prod.price.toFixed(2)}</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleProductRemove(prod._id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-darkBg-input transition-all"
+                              title="Remove Product"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
                           </div>
-                          <div className="flex items-center space-x-3">
-                            <div className="flex items-center space-x-1">
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">Qty:</span>
+                          
+                          <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100/50 dark:bg-black/20 p-2 rounded-xl border border-slate-200/30 dark:border-white/5">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Qty:</span>
                               <QtyControl
                                 value={prod.qty}
                                 onChange={(val) => handleProductQtyChange(prod._id, val)}
                               />
                             </div>
-                            <div className="flex items-center space-x-1">
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">Bonus:</span>
+                            <div className="flex items-center space-x-1.5">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bonus:</span>
                               <QtyControl
                                 value={prod.bonus || 0}
                                 onChange={(val) => handleProductBonusChange(prod._id, val)}
                                 min={0}
                               />
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleProductRemove(prod._id)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-darkBg-input transition-all"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
                           </div>
                         </div>
                       ))}
