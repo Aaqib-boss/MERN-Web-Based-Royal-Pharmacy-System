@@ -19,8 +19,24 @@ connectDB();
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:3050',
+  'http://localhost:5173',
+  'http://127.0.0.1:3050',
+  'http://127.0.0.1:5173',
+  'https://web-based-royal-pharmacy-system.vercel.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:3050', // Vite client dev server URL
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
