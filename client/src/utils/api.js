@@ -1,8 +1,11 @@
 import axios from 'axios';
+
+export const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
+  ? 'http://localhost:5000'
+  : 'https://web-based-royal-pharmacy-system.onrender.com';
+
 const api = axios.create({
-  baseURL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
-    ? 'http://localhost:5000/api'
-    : 'https://web-based-royal-pharmacy-system.onrender.com/api',
+  baseURL: `${BACKEND_URL}/api`,
 });
 // Interceptor to inject JWT authentication token
 api.interceptors.request.use(
