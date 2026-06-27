@@ -85,7 +85,7 @@ const Navbar = () => {
               >
                 {user.profilePhoto ? (
                   <img
-                    src={`${BACKEND_URL}${user.profilePhoto}`}
+                    src={user.profilePhoto.startsWith('data:') ? user.profilePhoto : `${BACKEND_URL}${user.profilePhoto}`}
                     alt={user.name}
                     className="w-8 h-8 rounded-lg object-cover ring-2 ring-primary/10"
                   />
@@ -166,7 +166,7 @@ const Navbar = () => {
             <div className="flex items-center px-3 space-x-3 mb-3">
               {user.profilePhoto ? (
                 <img
-                  src={`${BACKEND_URL}${user.profilePhoto}`}
+                  src={user.profilePhoto.startsWith('data:') ? user.profilePhoto : `${BACKEND_URL}${user.profilePhoto}`}
                   alt={user.name}
                   className="w-10 h-10 rounded-lg object-cover"
                 />

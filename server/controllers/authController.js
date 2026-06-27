@@ -264,8 +264,21 @@ const updateProfilePhoto = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (!req.file) return res.status(400).json({ message: 'Please upload a file' });
-    user.profilePhoto = `/uploads/${req.file.filename}`;
+
+    const fs = require('fs');
+    const base64Data = fs.readFileSync(req.file.path).toString('base64');
+    const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
+    // Delete local temporary file to free disk space
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (unlinkErr) {
+      console.error('Error deleting temp file:', unlinkErr);
+    }
+
+    user.profilePhoto = dataUrl;
     await user.save();
+
     res.json({
       _id: user._id, name: user.name, email: user.email,
       role: user.role, phone: user.phone, profilePhoto: user.profilePhoto,

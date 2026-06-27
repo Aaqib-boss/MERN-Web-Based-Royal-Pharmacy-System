@@ -250,7 +250,7 @@ const Profile = () => {
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   ) : user?.profilePhoto ? (
                     <img
-                      src={`${BACKEND_URL}${user.profilePhoto}`}
+                      src={user.profilePhoto.startsWith('data:') ? user.profilePhoto : `${BACKEND_URL}${user.profilePhoto}`}
                       alt={user.name}
                       className="w-full h-full object-cover"
                     />
@@ -471,7 +471,7 @@ const Profile = () => {
                             <td className="px-6 py-4 flex items-center space-x-3">
                               {usr.profilePhoto ? (
                                 <img
-                                  src={`${BACKEND_URL}${usr.profilePhoto}`}
+                                  src={usr.profilePhoto.startsWith('data:') ? usr.profilePhoto : `${BACKEND_URL}${usr.profilePhoto}`}
                                   alt={usr.name}
                                   className="w-10 h-10 rounded-lg object-cover"
                                 />
